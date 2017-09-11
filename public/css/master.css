@@ -1,0 +1,36 @@
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.row > div {
+  /*width: 50px;*/
+  border: black solid thin;
+}
+
+.row div div {
+  width: 50px;
+  height: 50px;
+  /*border: black solid thin;*/
+}
+
+.option {
+  /*background: url(http://www.freepngimg.com/download/rock/7-2-rock-free-png-image.png) no-repeat center center;*/
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+.socket {
+  /*background-image: url(http://www.freepngimg.com/download/rock/7-2-rock-free-png-image.png);*/
+  background-image: url(https://public.snapon.com/R_RRD/Objects_lg/images/SW420.jpg);
+}
+
+.paper {
+  background-image: url(http://pngimg.com/uploads/paper_sheet/paper_sheet_PNG7226.png);
+}
+
+.scissors {
+  background-image: url(http://www.clker.com/cliparts/b/9/b/7/11954219321422944761johnny_automatic_scissors.svg.hi.png);
+}
