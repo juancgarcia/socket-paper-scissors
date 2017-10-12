@@ -2,15 +2,30 @@
 /* global socket */
 Vue.component('app', {
   props: ['title', 'socket_id', 'channel', 'challenger_id', 'opponentSelection'],
+  data: function () {
+    return {
+      selection: ''
+    }
+  },
   template: `<div>
     {{ title }}
     <matchup
       v-bind:challenger_id="challenger_id"
       v-bind:socket_id="socket_id"
+      v-bind:selection="selection"
+      v-bind:opponentSelection="opponentSelection"
       /></matchup>
-    <hand-chooser></hand-chooser>
+    <hand-chooser
+      v-on:selection="setSelection"
+      ></hand-chooser>
     <div>Channel: {{ channel }}</div>
-    </div>`
+    </div>`,
+  methods: {
+    setSelection: function (choice) {
+      this.selection = choice
+      socket.emit('selection', choice)
+    }
+  }
 })
 
 const app = new Vue({
