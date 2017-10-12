@@ -14,7 +14,8 @@ app.use('/', express.static('./public'))
 
 let socketList = {}
 
-let channels = []
+let channels = {}
+
 let maxUsersPerChannel = 2
 
 io.on('connection', (socket) => {
@@ -44,19 +45,24 @@ io.on('connection', (socket) => {
 })
 
 function joinAChannel (joiningSocket, name = 'defaultChannel') {
-  let foundChannel = findAChannel(name)
+  let namedChannel = findNamedChannel(name)
 
-  // don't break the channel limit
-  if (canJoinChannel(foundChannel)) {
-    addUserToChannel(foundChannel, joiningSocket)
+  if (canJoinChannel(namedChannel)) {
+    return addUserToChannel(name, namedChannel, joiningSocket)
+  }
+
+  // otherwise find an available channel
+  let otherName = Object.keys(channels).find(chName => (canJoinChannel(channels[chName])))
+  if(channels[otherName]){
+    addUserToChannel(otherName, channels[otherName], joiningSocket)
   } else {
     // make new channel
+    let channelName = guid()
     let newChannel = {
-      name: guid(),
       users: []
     }
-    channels.push(newChannel)
-    addUserToChannel(newChannel, joiningSocket)
+    channels[channelName] = newChannel
+    addUserToChannel(channelName, newChannel, joiningSocket)
   }
 }
 
@@ -64,23 +70,30 @@ function leaveChannels (leavingSocket) {
   socketList[leavingSocket.id].channels.forEach(channelName => {
     // leave room/channel
     leavingSocket.leave(channelName)
+
     // abandon paring
     let departingChannel = findNamedChannel(channelName)
     let index = departingChannel.users.indexOf(leavingSocket.id)
     departingChannel.users.splice(index, 1)
+
     // delete channel if empty
+    if (channels[channelName].users.length === 0) {
+      delete channels[channelName]
+    }
+    console.log('channel list:', JSON.stringify(channels, null, 2))
   })
 }
 
-function addUserToChannel (channel, socket) {
+function addUserToChannel (name, channel, socket) {
   // join the channel
-  io.to(channel.name).emit('challenger', socket.id)
+  socket.join(name)
+  socketList[socket.id].channels.push(name)
 
-  socket.join(channel.name)
-  socketList[socket.id].channels.push(channel.name)
-
-  socket.emit('channel', channel.name)
+  socket.emit('channel', name)
   channel.users.push(socket.id)
+
+  // announce opponents
+  io.to(name).emit('challengers', channel.users)
 
   console.log('channel list:', JSON.stringify(channels, null, 2))
 }
@@ -89,18 +102,8 @@ function canJoinChannel (channel) {
   return channel && channel.users.length < maxUsersPerChannel
 }
 
-function findAChannel (name) {
-  let namedChannel = findNamedChannel(name)
-
-  if (namedChannel && canJoinChannel(namedChannel)) {
-    return namedChannel
-  } else {
-    return channels.find(ch => (canJoinChannel(ch)))
-  }
-}
-
 function findNamedChannel (name) {
-  return channels.find(ch => (ch.name === name))
+  return channels[name]
 }
 
 function guid () {
