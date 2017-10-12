@@ -1,11 +1,12 @@
 /* global Vue */
 Vue.component('matchup', {
+  props: ['socket_id', 'challenger_id'],
   template: `<div class="row matchup">
     <div class="me">
-      ME<div class="action"></div>
+      ME ({{socket_id}})<div class="action"></div>
     </div>
     <div class="them">
-      THEM<div class="action"></div>
+      THEM ({{challenger_id}})<div class="action"></div>
     </div>
   </div>`
 })
