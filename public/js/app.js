@@ -1,4 +1,5 @@
 /* global Vue */
+/* global socket */
 Vue.component('app', {
   props: ['title', 'socket_id', 'channel', 'challenger_id', 'opponentSelection'],
   template: `<div>
@@ -37,9 +38,11 @@ socket.on('channel', (channel) => {
   console.log('Joined channel:', channel)
   app.channel = channel
 })
-socket.on('challenger', (challenger_id) => {
-  console.log('A new challenger approaches:', challenger_id)
-  app.challenger_id = challenger_id
+socket.on('challengers', (challengerList) => {
+  console.log('A new challenger approaches:', challengerList)
+  let selfIndex = challengerList.indexOf(app.socket_id)
+  challengerList.splice(selfIndex, 1)
+  app.challenger_id = challengerList[0]
 })
 socket.on('selection', (opponentSelection) => {
   console.log('Opponent Selected:', opponentSelection)
