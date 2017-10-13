@@ -32,7 +32,16 @@ io.on('connection', (socket) => {
 
   // choice selected by a player
   socket.on('selection', (choice) => {
-    socket.broadcast.emit('selection', choice)
+    // socket.broadcast.emit('selection', choice)
+    socketList[socket.id].channels.forEach(ch => {
+      channels[ch].users.forEach(user => {
+        // skip current user
+        if (socket.id == user) {
+          return
+        }
+        io.to(user).emit('selection', choice)
+      })
+    })
   })
 
   socket.on('disconnect', () => {

@@ -42,6 +42,7 @@ const app = new Vue({
     v-bind:socket_id="socket_id"
     v-bind:channel="channel"
     v-bind:challenger_id="challenger_id"
+    v-bind:opponentSelection="opponentSelection"
     ></app>`
 })
 
