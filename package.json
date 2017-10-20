@@ -18,7 +18,10 @@
   },
   "homepage": "https://github.com/juancgarcia/socket-paper-scissors#readme",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "express": "^4.15.4",
-    "socket.io": "^2.0.3"
+    "jsonwebtoken": "^8.1.0",
+    "socket.io": "^2.0.3",
+    "socketio-jwt": "^4.5.0"
   }
 }
