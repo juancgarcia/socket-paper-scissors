@@ -3,7 +3,7 @@
 /* global socketPromise */
 socketPromise.then(socket => {
   Vue.component('app', {
-    props: ['title', 'socket_id', 'channel', 'challenger_id', 'opponentSelection', 'playerSelections'],
+    props: ['title', 'socket_id', 'channel', 'challenger_id', 'playerSelections'],
     data: function () {
       return {
         selection: ''
@@ -15,7 +15,6 @@ socketPromise.then(socket => {
         v-bind:challenger_id="challenger_id"
         v-bind:socket_id="socket_id"
         v-bind:selection="selection"
-        v-bind:opponentSelection="opponentSelection"
         v-bind:playerSelections="playerSelections"
         /></matchup>
       <hand-chooser
@@ -38,7 +37,6 @@ socketPromise.then(socket => {
       socket_id: null,
       challenger_id: null,
       channel: null,
-      opponentSelection: null,
       playerSelections: null
     },
     template: `<app
@@ -46,7 +44,6 @@ socketPromise.then(socket => {
       v-bind:socket_id="socket_id"
       v-bind:channel="channel"
       v-bind:challenger_id="challenger_id"
-      v-bind:opponentSelection="opponentSelection"
       v-bind:playerSelections="playerSelections"
       ></app>`
   })
@@ -64,10 +61,6 @@ socketPromise.then(socket => {
     let selfIndex = challengerList.indexOf(app.socket_id)
     challengerList.splice(selfIndex, 1)
     app.challenger_id = challengerList[0]
-  })
-  socket.on('selection', (opponentSelection) => {
-    console.log('Opponent Selected:', opponentSelection)
-    app.opponentSelection = opponentSelection
   })
   socket.on('selections', (playerSelections) => {
     console.log('Players Selected:', playerSelections)

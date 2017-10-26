@@ -1,6 +1,6 @@
 /* global Vue */
 Vue.component('matchup', {
-  props: ['socket_id', 'challenger_id', 'selection', 'opponentSelection', 'playerSelections'],
+  props: ['socket_id', 'challenger_id', 'selection', 'playerSelections'],
   template: `<div class="row matchup">
     <div class="me">
       ME <player
