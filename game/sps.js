@@ -16,6 +16,8 @@ let maxUsersPerChannel = 2
 // let channels = {}
 let channels = new ChannelList(maxUsersPerChannel)
 
+let sockets = {}
+
 function start (server) {
   const io = socketIo(server)
 
@@ -25,6 +27,7 @@ function start (server) {
   }))
 
   io.sockets.on('connection', (socket) => {
+    sockets[socket.id] = socket
     console.log('connected', socket.id)
     console.log('socket.decoded_token', JSON.stringify(socket.decoded_token, null, 2))
     // console.log('socket token', socket.handshake.query.token)
@@ -33,47 +36,49 @@ function start (server) {
     let user = guestAccounts.add(new User(/* userId */ socket.id, socket))
 
     // attempt to join an open channel
-    joinOpenChannel(user, socket)
+    joinOpenChannel(user)
 
     // choice selected by a player
-    handleSelection(socket)
+    handleSelection(user)
 
-    handleDisconnect(socket)
+    handleDisconnect(user)
   })
 
-  function handleSelection (socket) {
-    socket.on('selection', (choice) => {
+  function handleSelection (user) {
+    sockets[user.socketId].on('selection', (choice) => {
       // socket.broadcast.emit('selection', choice)
-      guestAccounts.get(socket.id).channels.forEach(ch => {
-        channels.get(ch).users.forEach(user => {
+      guestAccounts.get(user.socketId).channels.forEach(ch => {
+        // store user choice
+        channels.get(ch).users.forEach(chUser => {
           // skip current user
-          if (socket.id === user) {
+          if (user.socketId === chUser.socketId) {
             return
           }
-          io.to(user).emit('selection', choice)
+          io.to(chUser.socketId).emit('selection', choice)
         })
       })
     })
   }
 
-  function handleDisconnect (socket) {
-    socket.on('disconnect', () => {
-      console.log('disconnected', socket.id)
+  function handleDisconnect (user) {
+    sockets[user.socketId].on('disconnect', () => {
+      console.log('disconnected', user.socketId)
       // unjoin channel
-      leaveChannels(socket)
+      leaveChannels(user)
       // remove socket object
-      guestAccounts.remove(socket.id)
+      guestAccounts.remove(user.socketId)
+      delete sockets[user.socketId]
     })
   }
 
-  function leaveChannels (leavingSocket) {
-    guestAccounts.get(leavingSocket.id).channels.forEach(channelName => {
+  function leaveChannels (user) {
+    guestAccounts.get(user.socketId).channels.forEach(channelName => {
       // leave room/channel
-      leavingSocket.leave(channelName)
+      sockets[user.socketId].leave(channelName)
 
       // abandon paring
       let departingChannel = channels.get(channelName)
-      let index = departingChannel.users.indexOf(leavingSocket.id)
+      let index = departingChannel.users.indexOf(user.socketId)
       departingChannel.users.splice(index, 1)
 
       // delete channel if empty
@@ -83,29 +88,29 @@ function start (server) {
     })
   }
 
-  function joinOpenChannel (user, joiningSocket) {
+  function joinOpenChannel (user) {
     // find an available channel
     let openChannel = channels.findOpenChannel()
 
     if (openChannel) {
-      addUserToChannel(openChannel, user, joiningSocket)
+      addUserToChannel(openChannel, user)
     } else {
       // make new channel
       let newChannel = channels.add(new Channel(undefined, channels.maxUsersPerChannel))
-      addUserToChannel(newChannel, user, joiningSocket)
+      addUserToChannel(newChannel, user)
     }
   }
 
-  function addUserToChannel (channel, user, socket) {
+  function addUserToChannel (channel, user) {
     // join the channel
-    socket.join(channel.name)
+    sockets[user.socketId].join(channel.name)
     guestAccounts.get(user.id).channels.push(channel.name)
 
-    socket.emit('channel', channel.name)
-    channel.users.push(user.id)
+    sockets[user.socketId].emit('channel', channel.name)
+    channel.users.push(user)
 
     // announce opponents
-    io.to(channel.name).emit('challengers', channel.users)
+    io.to(channel.name).emit('challengers', channel.users.map(u => u.id))
 
     console.log('channel list:', JSON.stringify(channels, null, 2))
   }
