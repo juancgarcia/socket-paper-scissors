@@ -3,7 +3,7 @@ const socketioJwt = require('socketio-jwt')
 
 const jwtSecret = process.env.JWTSECRET || 'fakeSecret' // ./secret.txt
 
-const Channel = require('../data/channel')
+const Matchup = require('../data/matchup')
 const ChannelList = require('../data/channelList')
 
 const User = require('../data/user')
@@ -13,8 +13,7 @@ let guestAccounts = new UserStorage()
 
 let maxUsersPerChannel = 2
 
-// let channels = {}
-let channels = new ChannelList(maxUsersPerChannel)
+let matchups = new ChannelList(maxUsersPerChannel, Matchup)
 
 let sockets = {}
 
@@ -47,15 +46,17 @@ function start (server) {
   function handleSelection (user) {
     sockets[user.socketId].on('selection', (choice) => {
       // socket.broadcast.emit('selection', choice)
-      guestAccounts.get(user.socketId).channels.forEach(ch => {
-        // store user choice
-        channels.get(ch).users.forEach(chUser => {
-          // skip current user
-          if (user.socketId === chUser.socketId) {
-            return
-          }
-          io.to(chUser.socketId).emit('selection', choice)
-        })
+      user.channels.forEach(chName => {
+        let matchUp = matchups.get(chName)
+        // store user choice in channel
+        matchUp.addSelection(user.id, choice)
+        if (matchUp.allIn()) {
+          // alert players after 1 second for a moderate delay
+          setTimeout(() => {
+            io.to(chName).emit('selections', matchUp.getSelections())
+            matchUp.clearSelections()
+          }, 1000)
+        }
       })
     })
   }
@@ -77,26 +78,26 @@ function start (server) {
       sockets[user.socketId].leave(channelName)
 
       // abandon paring
-      let departingChannel = channels.get(channelName)
+      let departingChannel = matchups.get(channelName)
       let index = departingChannel.users.indexOf(user.socketId)
       departingChannel.users.splice(index, 1)
 
       // delete channel if empty
-      channels.remove(departingChannel)
+      matchups.remove(departingChannel)
 
-      console.log('channel list:', JSON.stringify(channels, null, 2))
+      // console.log('channel list:', JSON.stringify(matchups, null, 2))
     })
   }
 
   function joinOpenChannel (user) {
     // find an available channel
-    let openChannel = channels.findOpenChannel()
+    let openChannel = matchups.findOpenChannel()
 
     if (openChannel) {
       addUserToChannel(openChannel, user)
     } else {
       // make new channel
-      let newChannel = channels.add(new Channel(undefined, channels.maxUsersPerChannel))
+      let newChannel = matchups.add(new Matchup(undefined, matchups.maxUsersPerChannel))
       addUserToChannel(newChannel, user)
     }
   }
@@ -112,7 +113,7 @@ function start (server) {
     // announce opponents
     io.to(channel.name).emit('challengers', channel.users.map(u => u.id))
 
-    console.log('channel list:', JSON.stringify(channels, null, 2))
+    // console.log('channel list:', JSON.stringify(matchups, null, 2))
   }
 }
 

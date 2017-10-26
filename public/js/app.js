@@ -3,7 +3,7 @@
 /* global socketPromise */
 socketPromise.then(socket => {
   Vue.component('app', {
-    props: ['title', 'socket_id', 'channel', 'challenger_id', 'opponentSelection'],
+    props: ['title', 'socket_id', 'channel', 'challenger_id', 'opponentSelection', 'playerSelections'],
     data: function () {
       return {
         selection: ''
@@ -16,6 +16,7 @@ socketPromise.then(socket => {
         v-bind:socket_id="socket_id"
         v-bind:selection="selection"
         v-bind:opponentSelection="opponentSelection"
+        v-bind:playerSelections="playerSelections"
         /></matchup>
       <hand-chooser
         v-on:selection="setSelection"
@@ -37,7 +38,8 @@ socketPromise.then(socket => {
       socket_id: null,
       challenger_id: null,
       channel: null,
-      opponentSelection: null
+      opponentSelection: null,
+      playerSelections: null
     },
     template: `<app
       v-bind:title="titleText"
@@ -45,6 +47,7 @@ socketPromise.then(socket => {
       v-bind:channel="channel"
       v-bind:challenger_id="challenger_id"
       v-bind:opponentSelection="opponentSelection"
+      v-bind:playerSelections="playerSelections"
       ></app>`
   })
 
@@ -65,5 +68,9 @@ socketPromise.then(socket => {
   socket.on('selection', (opponentSelection) => {
     console.log('Opponent Selected:', opponentSelection)
     app.opponentSelection = opponentSelection
+  })
+  socket.on('selections', (playerSelections) => {
+    console.log('Players Selected:', playerSelections)
+    app.playerSelections = playerSelections
   })
 })

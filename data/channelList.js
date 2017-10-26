@@ -1,14 +1,14 @@
 const Channel = require('./channel')
 
 class ChannelList {
-  constructor (maxUsersPerChannel = 2, channel) {
+  constructor (maxUsersPerChannel = 2, channelClass) {
     this.list = {}
-    this.add(channel)
+    this.channelClass = channelClass || Channel
     this.maxUsersPerChannel = maxUsersPerChannel
   }
 
   add (channel) {
-    if (channel instanceof Channel) {
+    if (channel instanceof this.channelClass) {
       this.list[channel.name] = channel
     }
     return channel

@@ -8,7 +8,7 @@
   border: black solid thin;
 }
 
-.row div div {
+.row div .option {
   width: 50px;
   height: 50px;
   /*border: black solid thin;*/
