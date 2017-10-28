@@ -8,6 +8,7 @@ const socketPromise = fetch('/login', {
   },
   method: 'POST',
   body: JSON.stringify({
+    username: undefined,
     first_name: 'first_name',
     last_name: 'last_name',
     email: 'email'
@@ -16,6 +17,7 @@ const socketPromise = fetch('/login', {
   return response.json()
 }).then(body => {
   privateData.jwtToken = body.token
+  privateData.jwtPayload = JSON.parse(atob(privateData.jwtToken.split('.')[1]))
   // let socket = io()
   var socket = io.connect('', {
     'query': 'token=' + privateData.jwtToken

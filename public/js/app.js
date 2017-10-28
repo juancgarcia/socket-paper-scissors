@@ -3,7 +3,7 @@
 /* global socketPromise */
 socketPromise.then(socket => {
   Vue.component('app', {
-    props: ['title', 'socket_id', 'channel', 'challenger_id', 'playerSelections'],
+    props: ['title', 'username', 'channel', 'challenger_id', 'playerSelections'],
     data: function () {
       return {
         selection: ''
@@ -13,7 +13,7 @@ socketPromise.then(socket => {
       {{ title }}
       <matchup
         v-bind:challenger_id="challenger_id"
-        v-bind:socket_id="socket_id"
+        v-bind:username="username"
         v-bind:selection="selection"
         v-bind:playerSelections="playerSelections"
         /></matchup>
@@ -34,23 +34,25 @@ socketPromise.then(socket => {
     el: '#app',
     data: {
       titleText: `Let's play: Socket Paper Scissors!`,
-      socket_id: null,
+      username: null,
       challenger_id: null,
       channel: null,
       playerSelections: null
     },
     template: `<app
       v-bind:title="titleText"
-      v-bind:socket_id="socket_id"
+      v-bind:username="username"
       v-bind:channel="channel"
       v-bind:challenger_id="challenger_id"
       v-bind:playerSelections="playerSelections"
       ></app>`
   })
+  
+  app.username = privateData.jwtPayload.username
 
-  socket.on('connection', (socket_id) => {
-    console.log('Connected with id:', socket_id)
-    app.socket_id = socket_id
+  socket.on('connection', (socketId) => {
+    console.log('Connected with id:', socketId)
+    app.socketId = socketId
   })
   socket.on('channel', (channel) => {
     console.log('Joined channel:', channel)
@@ -58,7 +60,7 @@ socketPromise.then(socket => {
   })
   socket.on('challengers', (challengerList) => {
     console.log('A new challenger approaches:', challengerList)
-    let selfIndex = challengerList.indexOf(app.socket_id)
+    let selfIndex = challengerList.indexOf(app.username)
     challengerList.splice(selfIndex, 1)
     app.challenger_id = challengerList[0]
   })

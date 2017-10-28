@@ -2,6 +2,6 @@
 Vue.component('player', {
   props: ['playerSelection'],
   template: `<div class="player">
-    ({{playerSelection.id}})<div class="action">{{playerSelection.choice}}</div>
+    ({{playerSelection.username}})<div class="action">{{playerSelection.choice}}</div>
   </div>`
 })

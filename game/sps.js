@@ -32,7 +32,7 @@ function start (server) {
     // console.log('socket token', socket.handshake.query.token)
     socket.emit('connection', socket.id)
 
-    let user = guestAccounts.add(new User(/* userId */ socket.id, socket))
+    let user = guestAccounts.add(new User(/* userId */ socket.id, socket, socket.decoded_token))
 
     // attempt to join an open channel
     joinOpenChannel(user)
@@ -111,7 +111,7 @@ function start (server) {
     channel.users.push(user)
 
     // announce opponents
-    io.to(channel.name).emit('challengers', channel.users.map(u => u.id))
+    io.to(channel.name).emit('challengers', channel.users.map(u => ({id: u.id, username: u.profile.username})))
 
     // console.log('channel list:', JSON.stringify(matchups, null, 2))
   }

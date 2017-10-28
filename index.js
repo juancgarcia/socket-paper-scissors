@@ -7,6 +7,9 @@ const bodyParser = require('body-parser')
 const jwt = require('jsonwebtoken')
 const jwtSecret = process.env.JWTSECRET || 'fakeSecret' // ./secret.txt
 
+const SillyName = require('./lib/silly')
+const sng = new SillyName({textMode: 'TitleCase'})
+
 require('./game/sps')(server)
 
 app.set('port', process.env.PORT || 3001)
@@ -20,6 +23,7 @@ app.use(bodyParser.json())
 app.post('/login', function (req, res) {
   // TODO: validate the actual user user
   var profile = {
+    username: req.body.username || sng.generate(),
     first_name: req.body.first_name,
     last_name: req.body.last_name,
     email: req.body.email
