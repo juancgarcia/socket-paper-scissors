@@ -41,19 +41,24 @@ function start (server) {
     handleSelection(user)
 
     handleDisconnect(user)
+    // console.log('user list:', JSON.stringify(guestAccounts, null, 2))
   })
 
   function handleSelection (user) {
     sockets[user.socketId].on('selection', (choice) => {
       // socket.broadcast.emit('selection', choice)
+      // console.log('user selection', user.id, user.profile.username, choice)
       user.channels.forEach(chName => {
         let matchUp = matchups.get(chName)
         // store user choice in channel
         matchUp.addSelection(user.id, choice)
+        io.to(chName).emit('selections', matchUp.getPlayers())
+        // console.log('user selections', JSON.stringify(matchUp.userSelections, undefined, 2))
         if (matchUp.allIn()) {
+          // console.log('all in')
           // alert players after 1 second for a moderate delay
           setTimeout(() => {
-            io.to(chName).emit('selections', matchUp.getSelections())
+            io.to(chName).emit('selections', matchUp.getResults())
             matchUp.clearSelections()
           }, 1000)
         }
@@ -111,7 +116,7 @@ function start (server) {
     channel.users.push(user)
 
     // announce opponents
-    io.to(channel.name).emit('challengers', channel.users.map(u => ({id: u.id, username: u.profile.username})))
+    io.to(channel.name).emit('challengers', channel.getPlayers())
 
     // console.log('channel list:', JSON.stringify(matchups, null, 2))
   }

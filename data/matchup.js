@@ -8,8 +8,34 @@ class Matchup extends Channel {
   getSelection (userId) {
     return this.userSelections[userId]
   }
-  getSelections () {
-    return Object.keys(this.userSelections).map(id => ({ id: id, choice: this.getSelection(id), username: this.getUser(id).profile.username }))
+  getPlayers (wChoice = false) {
+    return this.users.map(user => {
+      return this.simplifyUser(user, wChoice)
+    })
+  }
+  getResults () {
+    let results = this.getPlayers(true)
+
+    for (let i = 0; i < results.length; i++) {
+      results[i].score = 0
+      for (let j = i + 1; j < results.length; j++) {
+        results[i].score += this.compare(results[i].choice, results[j].choice)
+      }
+    }
+
+    return results
+  }
+  compare (a, b) {
+    // tie => loss
+    // "my choice", "the choice I can beat"
+    return [
+      ['socket', 'scissors'], // socket beats scissors
+      ['paper', 'socket'],    // paper beats socket
+      ['scissors', 'paper']   // scissors beaps paper
+    ].reduce((acc, pair) => {
+      let win = a === pair[0] && b === pair[1]
+      return acc + win
+    }, 0)
   }
   addSelection (userId, choice) {
     this.userSelections[userId] = choice
@@ -22,8 +48,18 @@ class Matchup extends Channel {
   allIn () {
     return Object.keys(this.userSelections).length === this.users.length
   }
-  getUser(id) {
+  getUser (id) {
     return this.users.find(u => (u.id === id))
+  }
+  simplifyUser (user, wChoice = true) {
+    let simple = {
+      id: user.id,
+      username: user.profile.username
+    }
+    if (wChoice) {
+      simple.choice = this.getSelection(user.id)
+    }
+    return simple
   }
   // createPromise (abandonOld = false) {
   //   if (this.promise && this.promise instanceof Promise && ) {}

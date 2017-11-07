@@ -1,15 +1,15 @@
 /* global Vue */
 Vue.component('matchup', {
-  props: ['username', 'selection', 'playerSelections'],
+  props: ['playerSelection', 'challengerSelections'],
   template: `<div class="row matchup">
     <div class="me">
       ME <player
-        v-bind:playerSelection="{username: username, choice: selection}"
+        v-bind:playerSelection="playerSelection"
         ></player>
     </div>
     <div class="them">
-      Results <player
-          v-for="(item, index) in playerSelections"
+      Challengers <player
+          v-for="(item, index) in challengerSelections"
           v-bind:playerSelection="item"
           v-bind:index="index"
           v-bind:key="item.id"
