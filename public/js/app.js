@@ -38,6 +38,7 @@ socketPromise.then(socket => {
     },
     template: `<app
       v-bind:title="titleText"
+      v-bind:channel="channel"
       v-bind:playerSelection="playerSelection"
       v-bind:challengerSelections="challengerSelections"
       ></app>`

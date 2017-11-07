@@ -18,8 +18,10 @@ class Matchup extends Channel {
 
     for (let i = 0; i < results.length; i++) {
       results[i].score = 0
-      for (let j = i + 1; j < results.length; j++) {
-        results[i].score += this.compare(results[i].choice, results[j].choice)
+      for (let j = 0; j < results.length; j++) {
+        if (i !== j) {
+          results[i].score += this.compare(results[i].choice, results[j].choice)
+        }
       }
     }
 
