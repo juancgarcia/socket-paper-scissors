@@ -101,6 +101,8 @@ function start (server) {
       let index = departingChannel.users.indexOf(user.socketId)
       departingChannel.users.splice(index, 1)
 
+      io.to(channelName).emit('challengers', departingChannel.getPlayers())
+
       // delete channel if empty
       matchups.remove(departingChannel)
 
