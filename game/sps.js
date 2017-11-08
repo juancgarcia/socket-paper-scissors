@@ -41,6 +41,8 @@ function start (server) {
     handleSelection(user)
 
     handleDisconnect(user)
+
+    handleUsernameUpdate(user)
     // console.log('user list:', JSON.stringify(guestAccounts, null, 2))
   })
 
@@ -62,6 +64,18 @@ function start (server) {
             matchUp.clearSelections()
           }, 1000)
         }
+      })
+    })
+  }
+
+  function handleUsernameUpdate(user) {
+    sockets[user.socketId].on('username', value => {
+      user.profile.username = value
+
+      // update channels
+      user.channels.forEach(channelName => {
+        let matchUp = matchups.get(channelName)
+        io.to(channelName).emit('challengers', matchUp.getPlayers())
       })
     })
   }
