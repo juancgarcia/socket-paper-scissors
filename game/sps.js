@@ -3,6 +3,8 @@ const socketioJwt = require('socketio-jwt')
 
 const jwtSecret = process.env.JWTSECRET || 'fakeSecret' // ./secret.txt
 
+const guid = require('../data/guid')
+
 const Matchup = require('../data/matchup')
 const ChannelList = require('../data/channelList')
 
@@ -47,10 +49,10 @@ function start (server) {
   })
 
   function handleSelection (user) {
-    sockets[user.socketId].on('selection', (choice) => {
-      // socket.broadcast.emit('selection', choice)
-      // console.log('user selection', user.id, user.profile.username, choice)
-      user.channels.forEach(chName => {
+    sockets[user.socketId].on('selection', (channelChoice) => {
+      let chName = channelChoice.channel
+      let choice = channelChoice.choice
+
         let matchUp = matchups.get(chName)
         // store user choice in channel
         matchUp.addSelection(user.id, choice)
@@ -64,7 +66,7 @@ function start (server) {
             matchUp.clearSelections()
           }, 1000)
         }
-      })
+
     })
   }
 
@@ -115,26 +117,14 @@ function start (server) {
     let openChannel = matchups.findOpenChannel()
 
     if (openChannel) {
-      addUserToChannel(openChannel, user)
+      openChannel.addUser(user)
     } else {
       // make new channel
-      let newChannel = matchups.add(new Matchup(undefined, matchups.maxUsersPerChannel))
-      addUserToChannel(newChannel, user)
+      let name = guid()
+      let socketChannel = io.to(name)
+      let newChannel = matchups.add(new Matchup(name, socketChannel, matchups.maxUsersPerChannel))
+      newChannel.addUser(user)
     }
-  }
-
-  function addUserToChannel (channel, user) {
-    // join the channel
-    sockets[user.socketId].join(channel.name)
-    guestAccounts.get(user.id).channels.push(channel.name)
-
-    sockets[user.socketId].emit('channel', channel.name)
-    channel.users.push(user)
-
-    // announce opponents
-    io.to(channel.name).emit('challengers', channel.getPlayers())
-
-    // console.log('channel list:', JSON.stringify(matchups, null, 2))
   }
 }
 

@@ -36,7 +36,7 @@ socketPromise.then(socket => {
       },
       setSelection: function (choice) {
         this.selection = choice
-        socket.emit('selection', choice)
+        socket.emit('selection', { channel: app.channel, choice: choice})
       }
     },
     watch: {

@@ -1,8 +1,8 @@
 const Channel = require('./channel')
 
 class Matchup extends Channel {
-  constructor (name, maxUsers) {
-    super(name, 2)
+  constructor (name, socketChannel, maxUsers) {
+    super(name, socketChannel, 2)
     this.userSelections = {}
   }
   getSelection (userId) {

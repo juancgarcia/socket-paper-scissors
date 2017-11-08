@@ -1,22 +1,27 @@
+const guid = require('./guid')
+
 class Channel {
-  constructor (name = guid(), maxUsers) {
+  constructor (name = guid(), socketChannel, maxUsers) {
     this.name = name
+    this.socket = socketChannel
     this.users = []
     this.maxUsers = maxUsers
   }
   joinable () {
     return this.users.length < this.maxUsers
   }
-}
+  addUser (user) {
+    // join the channel
+    user.socket.join(this.name)
+    user.channels.push(this.name)
+    user.socket.emit('channel', this.name)
 
-function guid () {
-  function s4 () {
-    return Math.floor((1 + Math.random()) * 0x10000)
-      .toString(16)
-      .substring(1)
+    this.users.push(user)
+    // announce opponents
+    this.socket.emit('challengers', this.getPlayers())
+
+    // console.log('channel list:', JSON.stringify(matchups, null, 2))
   }
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-    s4() + '-' + s4() + s4() + s4()
 }
 
 module.exports = Channel
