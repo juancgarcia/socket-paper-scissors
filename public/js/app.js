@@ -6,8 +6,7 @@ socketPromise.then(socket => {
     props: ['title', 'playerSelection', 'channel', 'challengerSelections'],
     data: function () {
       return {
-        selection: '',
-        editMode: false
+        selection: ''
       }
     },
     template: `<div>
@@ -20,28 +19,19 @@ socketPromise.then(socket => {
         v-on:selection="setSelection"
         ></hand-chooser>
       <div>Channel: {{ channel }}</div>
-      <div>Click username to edit:
-        <input
-          v-if="editMode"
-          v-on:blur="toggleEdit()"
-          v-model="playerSelection.username" placeholder="edit me">
-        <span
-          v-else
-          v-on:click="toggleEdit()">{{ playerSelection.username }}</span>
-      </div>
+      <username
+        v-bind:inputUsername="playerSelection.username"
+        v-on:update="changeUsername">
+      </username>
       </div>`,
     methods: {
-      toggleEdit: function () {
-        this.editMode = !this.editMode
+      changeUsername: function (val) {
+        this.playerSelection.username = val
+        socket.emit('username', val)
       },
       setSelection: function (choice) {
         this.selection = choice
-        socket.emit('selection', { channel: app.channel, choice: choice})
-      }
-    },
-    watch: {
-      'playerSelection.username': function (val) {
-        socket.emit('username', val)
+        socket.emit('selection', {channel: app.channel, choice: choice})
       }
     }
   })
