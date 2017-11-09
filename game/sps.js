@@ -17,8 +17,6 @@ let maxUsersPerChannel = 2
 
 let matchups = new ChannelList(maxUsersPerChannel, Matchup)
 
-let sockets = {}
-
 function start (server) {
   const io = socketIo(server)
 
@@ -28,7 +26,6 @@ function start (server) {
   }))
 
   io.sockets.on('connection', (socket) => {
-    sockets[socket.id] = socket
     console.log('connected', socket.id)
     console.log('socket.decoded_token', JSON.stringify(socket.decoded_token, null, 2))
     // console.log('socket token', socket.handshake.query.token)
@@ -49,20 +46,20 @@ function start (server) {
   })
 
   function handleSelection (user) {
-    sockets[user.socketId].on('selection', (channelChoice) => {
+    user.socket.on('selection', (channelChoice) => {
       let chName = channelChoice.channel
       let choice = channelChoice.choice
 
         let matchUp = matchups.get(chName)
         // store user choice in channel
         matchUp.addSelection(user.id, choice)
-        io.to(chName).emit('selections', matchUp.getPlayers())
+        matchUp.sendChallengers()
         // console.log('user selections', JSON.stringify(matchUp.userSelections, undefined, 2))
         if (matchUp.allIn()) {
           // console.log('all in')
           // alert players after 1 second for a moderate delay
           setTimeout(() => {
-            io.to(chName).emit('selections', matchUp.getResults())
+            matchUp.sendSelections()
             matchUp.clearSelections()
           }, 1000)
         }
@@ -71,46 +68,36 @@ function start (server) {
   }
 
   function handleUsernameUpdate(user) {
-    sockets[user.socketId].on('username', value => {
+    user.socket.on('username', value => {
       user.profile.username = value
 
       // update channels
       user.channels.forEach(channelName => {
         let matchUp = matchups.get(channelName)
-        io.to(channelName).emit('challengers', matchUp.getPlayers())
+        matchUp.sendChallengers()
       })
     })
   }
 
   function handleDisconnect (user) {
-    sockets[user.socketId].on('disconnect', () => {
+    user.socket.on('disconnect', () => {
       console.log('disconnected', user.socketId)
       // unjoin channel
       leaveChannels(user)
       // remove socket object
       guestAccounts.remove(user.socketId)
-      delete sockets[user.socketId]
     })
   }
 
   function leaveChannels (user) {
-    guestAccounts.get(user.socketId).channels.forEach(channelName => {
-      // leave room/channel
-      sockets[user.socketId].leave(channelName)
-
-      // abandon paring
-      let departingChannel = matchups.get(channelName)
-      let index = departingChannel.users.indexOf(user.socketId)
-      departingChannel.users.splice(index, 1)
-
-      io.to(channelName).emit('challengers', departingChannel.getPlayers())
-
-      // delete channel if empty
-      matchups.remove(departingChannel)
-
-      // console.log('channel list:', JSON.stringify(matchups, null, 2))
+    user.channels.forEach(channelName => {
+      matchups.get(channelName).removeUser(user)
     })
   }
+
+  // TODO: allow joinOpenChannel be triggered by the user
+  // in addition to "on connect"
+  // function handleJoinNewChannel (user) {}
 
   function joinOpenChannel (user) {
     // find an available channel

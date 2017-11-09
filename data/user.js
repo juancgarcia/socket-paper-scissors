@@ -7,6 +7,12 @@ class User {
     this.isGuest = true
     this.channels = []
   }
+  emit (evt, data) {
+    this.socket.emit(evt, data)
+  }
+  sendChannels () {
+    this.emit('userChannels', this.channels)
+  }
 }
 
 module.exports = User

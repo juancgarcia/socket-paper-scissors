@@ -7,6 +7,9 @@ class Channel {
     this.users = []
     this.maxUsers = maxUsers
   }
+  emit (evt, data) {
+    this.socket.emit(evt, data)
+  }
   joinable () {
     return this.users.length < this.maxUsers
   }
@@ -14,13 +17,18 @@ class Channel {
     // join the channel
     user.socket.join(this.name)
     user.channels.push(this.name)
-    user.socket.emit('channel', this.name)
-
+    // user.socket.emit('channel', this.name)
+    user.sendChannels()
     this.users.push(user)
-    // announce opponents
-    this.socket.emit('challengers', this.getPlayers())
+  }
+  removeUser (user) {
+    user.socket.leave(this.name)
 
-    // console.log('channel list:', JSON.stringify(matchups, null, 2))
+    let index = user.channels.indexOf(this.name)
+    user.channels.splice(index, 1)
+
+    index = this.users.indexOf(user)
+    this.users.splice(index, 1)
   }
 }
 

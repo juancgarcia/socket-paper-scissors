@@ -5,6 +5,20 @@ class Matchup extends Channel {
     super(name, socketChannel, 2)
     this.userSelections = {}
   }
+  sendChallengers () {
+    this.emit('challengers', this.getPlayers())
+  }
+  sendSelections () {
+    this.emit('selections', this.getResults())
+  }
+  addUser (user) {
+    Channel.prototype.addUser.call(this, user)
+    this.sendChallengers()
+  }
+  removeUser (user) {
+    Channel.prototype.removeUser.call(this, user)
+    this.sendChallengers()
+  }
   getSelection (userId) {
     return this.userSelections[userId]
   }

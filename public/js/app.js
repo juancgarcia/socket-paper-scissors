@@ -55,9 +55,13 @@ socketPromise.then(socket => {
     console.log('Connected with id:', socketId)
     app.socketId = socketId
   })
-  socket.on('channel', (channel) => {
-    console.log('Joined channel:', channel)
-    app.channel = channel
+  // socket.on('channel', (channel) => {
+  //   console.log('Joined channel:', channel)
+  //   app.channel = channel
+  // })
+  socket.on('userChannels', (channels) => {
+    console.log('Joined channels:', channels)
+    app.channel = channels[0]
   })
   socket.on('challengers', (challengerList) => {
     console.log('A new challenger approaches:', JSON.stringify(challengerList, undefined, 2))
