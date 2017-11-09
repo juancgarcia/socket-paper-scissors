@@ -11,14 +11,12 @@ socketPromise.then(socket => {
     },
     template: `<div>
       {{ title }}
-      <results
+      <matchup
         v-bind:playerSelection="playerSelection"
         v-bind:challengerSelections="challengerSelections"
-        /></results>
-      <hand-chooser
+        v-bind:channel="channel"
         v-on:selection="setSelection"
-        ></hand-chooser>
-      <div>Channel: {{ channel }}</div>
+        /></matchup>
       <username
         v-bind:inputUsername="playerSelection.username"
         v-on:update="changeUsername">
@@ -29,9 +27,8 @@ socketPromise.then(socket => {
         this.playerSelection.username = val
         socket.emit('username', val)
       },
-      setSelection: function (choice) {
-        this.selection = choice
-        socket.emit('selection', {channel: app.channel, choice: choice})
+      setSelection: function (channelChoice) {
+        socket.emit('selection', channelChoice)
       }
     }
   })
