@@ -1,5 +1,5 @@
 /* global Vue */
-Vue.component('matchup', {
+Vue.component('results', {
   props: ['playerSelection', 'challengerSelections'],
   template: `<div class="row matchup">
     <div class="me">

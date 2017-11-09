@@ -12,10 +12,10 @@ socketPromise.then(socket => {
     },
     template: `<div>
       {{ title }}
-      <matchup
+      <results
         v-bind:playerSelection="playerSelection"
         v-bind:challengerSelections="challengerSelections"
-        /></matchup>
+        /></results>
       <hand-chooser
         v-on:selection="setSelection"
         ></hand-chooser>
