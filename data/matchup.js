@@ -6,10 +6,22 @@ class Matchup extends Channel {
     this.userSelections = {}
   }
   sendChallengers () {
-    this.emit('challengers', this.getPlayers())
+    let payload = {
+      updated: Date.now(),
+      channel: this.name,
+      players: this.getPlayers()
+    }
+    console.log('challengers', payload)
+    this.emit('challengers', payload)
   }
   sendSelections () {
-    this.emit('selections', this.getResults())
+    let payload = {
+      updated: Date.now(),
+      channel: this.name,
+      players: this.getResults()
+    }
+    console.log('selections', payload)
+    this.emit('selections', payload)
   }
   addUser (user) {
     Channel.prototype.addUser.call(this, user)

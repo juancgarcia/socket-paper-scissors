@@ -1,30 +1,50 @@
 /* global Vue */
-/* global socket */
+/* global privateData */
 /* global socketPromise */
 socketPromise.then(socket => {
   Vue.component('app', {
-    props: ['title', 'playerSelection', 'channel', 'challengerSelections'],
+    props: [ 'title', 'userId', 'inputUsername', 'channels', 'channelNames' ],
     data: function () {
       return {
-        selection: ''
+        username: this.inputUsername
       }
     },
-    template: `<div>
-      {{ title }}
-      <matchup
-        v-bind:playerSelection="playerSelection"
-        v-bind:challengerSelections="challengerSelections"
-        v-bind:channel="channel"
-        v-on:selection="setSelection"
-        /></matchup>
-      <username
-        v-bind:inputUsername="playerSelection.username"
-        v-on:update="changeUsername">
-      </username>
-      </div>`,
+    render: function (createElement) {
+      return createElement(
+        'div',
+        [].concat(
+          this._v(this.title),
+          this._v(this.username),
+          this._v(this.userId),
+          this.channels.map(channelData => (
+            this.createAGame(createElement, channelData)
+          )),
+          createElement('username', {
+            props: {
+              inputUsername: this.username
+            },
+            on: {
+              update: this.changeUsername
+            }
+          })
+        )
+      )
+    },
     methods: {
+      createAGame: function (createElement, channelData) {
+        return createElement('matchup', {
+          props: {
+            playerId: this.userId,
+            players: channelData.players,
+            channel: channelData.channel
+          },
+          on: {
+            selection: this.setSelection
+          }
+        })
+      },
       changeUsername: function (val) {
-        this.playerSelection.username = val
+        this.username = val
         socket.emit('username', val)
       },
       setSelection: function (channelChoice) {
@@ -37,43 +57,55 @@ socketPromise.then(socket => {
     el: '#app',
     data: {
       titleText: `Let's play: Socket Paper Scissors!`,
-      playerSelection: {},
-      channel: null,
-      challengerSelections: []
+      username: privateData.jwtPayload.username,
+      userId: null,
+      channels: [],
+      channelNames: []
     },
     template: `<app
       v-bind:title="titleText"
-      v-bind:channel="channel"
-      v-bind:playerSelection="playerSelection"
-      v-bind:challengerSelections="challengerSelections"
+      v-bind:inputUsername="username"
+      v-bind:userId="userId"
+      v-bind:channels="channels"
+      v-bind:channelNames="channelNames"
       ></app>`
   })
 
-  app.playerSelection = {username: privateData.jwtPayload.username}
-
   socket.on('connection', (socketId) => {
     console.log('Connected with id:', socketId)
-    app.socketId = socketId
+    app.userId = socketId
   })
-  // socket.on('channel', (channel) => {
-  //   console.log('Joined channel:', channel)
-  //   app.channel = channel
-  // })
+
   socket.on('userChannels', (channels) => {
     console.log('Joined channels:', channels)
-    app.channel = channels[0]
+    app.channelNames = channels
   })
+
+  let applyChannelData = channelData => {
+    let channel = channelData.channel
+
+    app.channels = app.channels || []
+    app.channelNames = app.channelNames || []
+
+    // new channel?
+    if (app.channelNames.indexOf(channel) < 0) {
+      app.channelNames.push(channel)
+      app.channels.push(channelData)
+    } else {
+      // existing channel
+      let idx = app.channels.findIndex(channelObj => (channel === channelObj.channel))
+      app.channels.splice(idx, 1)
+      app.channels.push(channelData)
+    }
+  }
+
   socket.on('challengers', (challengerList) => {
-    console.log('A new challenger approaches:', JSON.stringify(challengerList, undefined, 2))
-    let selfIndex = challengerList.findIndex(user => (app.playerSelection.username === user.username))
-    challengerList.splice(selfIndex, 1)
-    app.challengerSelections = challengerList
+    console.log('New challengers approach:', JSON.stringify(challengerList, undefined, 2))
+    applyChannelData(challengerList)
   })
+
   socket.on('selections', (playerSelections) => {
     console.log('Players Selected:', JSON.stringify(playerSelections, undefined, 2))
-    let selfIndex = playerSelections.findIndex(user => (app.playerSelection.username === user.username))
-    let currentPlayer = playerSelections.splice(selfIndex, 1)[0]
-    app.playerSelection = currentPlayer
-    app.challengerSelections = playerSelections
+    applyChannelData(playerSelections)
   })
 })
