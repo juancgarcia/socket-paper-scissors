@@ -50,24 +50,23 @@ function start (server) {
       let chName = channelChoice.channel
       let choice = channelChoice.choice
 
-        let matchUp = matchups.get(chName)
-        // store user choice in channel
-        matchUp.addSelection(user.id, choice)
-        matchUp.sendChallengers()
-        // console.log('user selections', JSON.stringify(matchUp.userSelections, undefined, 2))
-        if (matchUp.allIn()) {
-          // console.log('all in')
-          // alert players after 1 second for a moderate delay
-          setTimeout(() => {
-            matchUp.sendSelections()
-            matchUp.clearSelections()
-          }, 1000)
-        }
-
+      let matchUp = matchups.get(chName)
+      // store user choice in channel
+      matchUp.addSelection(user.id, choice)
+      matchUp.sendChallengers()
+      // console.log('user selections', JSON.stringify(matchUp.userSelections, undefined, 2))
+      if (matchUp.allIn()) {
+        // console.log('all in')
+        // alert players after 1 second for a moderate delay
+        setTimeout(() => {
+          matchUp.sendSelections()
+          matchUp.clearSelections()
+        }, 1000)
+      }
     })
   }
 
-  function handleUsernameUpdate(user) {
+  function handleUsernameUpdate (user) {
     user.socket.on('username', value => {
       user.profile.username = value
 
@@ -108,8 +107,13 @@ function start (server) {
     } else {
       // make new channel
       let name = guid()
-      let socketChannel = io.to(name)
+      console.log('new socket channel', name)
+      let socketChannel = io.in(name)
       let newChannel = matchups.add(new Matchup(name, socketChannel, matchups.maxUsersPerChannel))
+
+      // Publish channel list to all users when a channel is created
+      io.local.emit('publicChannels', matchups.getNames())
+
       newChannel.addUser(user)
     }
   }

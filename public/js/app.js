@@ -81,6 +81,11 @@ socketPromise.then(socket => {
     app.channelNames = channels
   })
 
+  socket.on('publicChannels', (channels) => {
+    console.log('Public channels:', channels)
+    app.publicChannelNames = channels
+  })
+
   let applyChannelData = channelData => {
     let channel = channelData.channel
 
