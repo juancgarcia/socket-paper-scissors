@@ -1,14 +1,15 @@
 const guid = require('./guid')
 
 class Channel {
-  constructor (name = guid(), socketChannel, maxUsers) {
+  constructor (name = guid(), io, maxUsers) {
     this.name = name
-    this.socket = socketChannel
+    this.io = io
     this.users = []
     this.maxUsers = maxUsers
   }
   emit (evt, data) {
-    this.socket.emit(evt, data)
+    this.io.to(this.name).emit(evt, data)
+    console.log(`this.io.to(${this.name}).emit(${evt}, ${data})`)
   }
   joinable () {
     return this.users.length < this.maxUsers

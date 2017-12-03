@@ -14,6 +14,10 @@ class ChannelList {
     return channel
   }
 
+  getNames () {
+    return Object.keys(this.list)
+  }
+
   get (name) {
     return this.list[name]
   }
