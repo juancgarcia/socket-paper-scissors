@@ -32,7 +32,7 @@ function start (server) {
     // console.log('socket token', socket.handshake.query.token)
     socket.emit('connection', socket.id)
 
-    let user = guestAccounts.add(new User(/* userId */ socket.id, /*socket*/ socket, socket.decoded_token))
+    let user = guestAccounts.add(new User(/* userId */ socket.id, /* socket */ socket, socket.decoded_token))
 
     // send current public channels to this user
     announcePublicChannels(socket)
