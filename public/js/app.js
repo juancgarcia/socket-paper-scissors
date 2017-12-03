@@ -3,7 +3,7 @@
 /* global socketPromise */
 socketPromise.then(socket => {
   Vue.component('app', {
-    props: [ 'title', 'userId', 'inputUsername', 'channels', 'channelNames' ],
+    props: [ 'title', 'userId', 'inputUsername', 'channels', 'userChannels', 'publicChannels' ],
     data: function () {
       return {
         username: this.inputUsername
@@ -19,6 +19,18 @@ socketPromise.then(socket => {
           this.channels.map(channelData => (
             this.createAGame(createElement, channelData)
           )),
+          createElement('channel-list', {
+            props: {
+              title: 'Public Channels',
+              channels: this.publicChannels
+            }
+          }),
+          // createElement('channel-list', {
+          //   props: {
+          //     title: 'User Channels',
+          //     channels: this.userChannels
+          //   }
+          // }),
           createElement('username', {
             props: {
               inputUsername: this.username
@@ -60,14 +72,16 @@ socketPromise.then(socket => {
       username: privateData.jwtPayload.username,
       userId: null,
       channels: [],
-      channelNames: []
+      userChannels: [],
+      publicChannels: []
     },
     template: `<app
       v-bind:title="titleText"
       v-bind:inputUsername="username"
       v-bind:userId="userId"
       v-bind:channels="channels"
-      v-bind:channelNames="channelNames"
+      v-bind:userChannels="userChannels"
+      v-bind:publicChannels="publicChannels"
       ></app>`
   })
 
@@ -78,23 +92,23 @@ socketPromise.then(socket => {
 
   socket.on('userChannels', (channels) => {
     console.log('Joined channels:', channels)
-    app.channelNames = channels
+    app.userChannels = channels
   })
 
   socket.on('publicChannels', (channels) => {
     console.log('Public channels:', channels)
-    app.publicChannelNames = channels
+    app.publicChannels = channels
   })
 
   let applyChannelData = channelData => {
     let channel = channelData.channel
 
     app.channels = app.channels || []
-    app.channelNames = app.channelNames || []
+    app.userChannels = app.userChannels || []
 
     // new channel?
-    if (app.channelNames.indexOf(channel) < 0) {
-      app.channelNames.push(channel)
+    if (app.userChannels.indexOf(channel) < 0) {
+      app.userChannels.push(channel)
       app.channels.push(channelData)
     } else {
       // existing channel
