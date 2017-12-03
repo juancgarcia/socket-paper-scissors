@@ -1,10 +1,9 @@
 const Channel = require('./channel')
 
 class ChannelList {
-  constructor (maxUsersPerChannel = 2, channelClass) {
+  constructor (channelClass) {
     this.list = {}
     this.channelClass = channelClass || Channel
-    this.maxUsersPerChannel = maxUsersPerChannel
   }
 
   add (channel) {
@@ -23,13 +22,12 @@ class ChannelList {
   }
 
   findOpenChannel () {
-    let channelName = Object.keys(this.list).find(chName => (this.canJoin(this.list[chName])))
+    let channelName = Object.keys(this.list).find(chName => (this.needsUsers(this.list[chName])))
     return this.list[channelName]
   }
 
-  canJoin (channel) {
-    // return channel && channel.users.length < maxUsersPerChannel
-    return channel && channel instanceof Channel && channel.joinable()
+  needsUsers (channel) {
+    return channel && channel instanceof Channel && channel.waitingForUsers()
   }
 
   remove (channel, force = false) {

@@ -5,7 +5,15 @@ Vue.component('channel-list', {
     <ul class="channels">
       <li v-for="channel in channels">
         {{ channel }}
+        <button
+          v-on:click="joinChannel(channel)"
+          >Join Channel</button>
       </li>
     </ul>
-  </div>`
+  </div>`,
+  methods: {
+    joinChannel: function (channel) {
+      this.$emit('join', channel)
+    }
+  }
 })

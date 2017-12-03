@@ -13,9 +13,7 @@ const UserStorage = require('../data/userStorage')
 
 let guestAccounts = new UserStorage()
 
-let maxUsersPerChannel = 2
-
-let matchups = new ChannelList(maxUsersPerChannel, Matchup)
+let matchups = new ChannelList(Matchup)
 
 function start (server) {
   const io = socketIo(server)
@@ -39,6 +37,9 @@ function start (server) {
 
     // attempt to join an open channel
     joinOpenChannel(user)
+
+    // enable joining arbitrary channel by name
+    handleJoinNamedChannel(user)
 
     // choice selected by a player
     handleSelection(user)
@@ -102,6 +103,17 @@ function start (server) {
   // in addition to "on connect"
   // function handleJoinNewChannel (user) {}
 
+  function handleJoinNamedChannel (user) {
+    user.socket.on('join', channelName => {
+      let channel = matchups.get(channelName)
+      if (!channel.full()) {
+        channel.addUser(user)
+      } else {
+        user.socket.emit('channel-not-joinable', channelName)
+      }
+    })
+  }
+
   function joinOpenChannel (user) {
     // find an available channel
     let openChannel = matchups.findOpenChannel()
@@ -111,7 +123,7 @@ function start (server) {
     } else {
       // make new channel
       let name = guid()
-      let newChannel = matchups.add(new Matchup(name, playersNS, matchups.maxUsersPerChannel))
+      let newChannel = matchups.add(new Matchup(name, playersNS))
 
       // Publish channel list to all users when a channel is created
       announcePublicChannels(playersNS)

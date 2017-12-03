@@ -23,6 +23,9 @@ socketPromise.then(socket => {
             props: {
               title: 'Public Channels',
               channels: this.publicChannels
+            },
+            on: {
+              join: this.joinChannel
             }
           }),
           // createElement('channel-list', {
@@ -61,6 +64,9 @@ socketPromise.then(socket => {
       },
       setSelection: function (channelChoice) {
         socket.emit('selection', channelChoice)
+      },
+      joinChannel: function (channel) {
+        socket.emit('join', channel)
       }
     }
   })
@@ -107,14 +113,17 @@ socketPromise.then(socket => {
     app.userChannels = app.userChannels || []
 
     // new channel?
-    if (app.userChannels.indexOf(channel) < 0) {
+    if (!app.channels.find(ch => (ch.channel === channel))) {
       app.userChannels.push(channel)
       app.channels.push(channelData)
     } else {
       // existing channel
       let idx = app.channels.findIndex(channelObj => (channel === channelObj.channel))
-      app.channels.splice(idx, 1)
-      app.channels.push(channelData)
+      // split array, remove old channelData, then merge the array parts
+      let begin = app.channels.splice(0, idx)
+      app.channels.shift()
+      app.channels.unshift(channelData)
+      begin.reverse().forEach(ch => { app.channels.unshift(ch) })
     }
   }
 
@@ -126,5 +135,9 @@ socketPromise.then(socket => {
   socket.on('selections', (playerSelections) => {
     console.log('Players Selected:', JSON.stringify(playerSelections, undefined, 2))
     applyChannelData(playerSelections)
+  })
+
+  socket.on('channel-not-joinable', (channel) => {
+    console.log('Channel Not Joinable:', channel)
   })
 })

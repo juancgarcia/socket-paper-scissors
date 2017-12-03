@@ -10,6 +10,12 @@ class User {
   emit (evt, data) {
     this.socket.emit(evt, data)
   }
+  addChannel (channel) {
+    this.socket.join(channel)
+    if (this.channels.indexOf(channel) < 0) {
+      this.channels.push(channel)
+    }
+  }
   sendChannels () {
     this.emit('userChannels', this.channels)
   }
