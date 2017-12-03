@@ -19,19 +19,23 @@ let matchups = new ChannelList(maxUsersPerChannel, Matchup)
 
 function start (server) {
   const io = socketIo(server)
+  const playersNS = io.of('/players')
 
-  io.use(socketioJwt.authorize({
+  playersNS.use(socketioJwt.authorize({
     secret: jwtSecret,
     handshake: true
   }))
 
-  io.on('connection', (socket) => {
+  playersNS.on('connection', (socket) => {
     console.log('connected', socket.id)
     console.log('socket.decoded_token', JSON.stringify(socket.decoded_token, null, 2))
     // console.log('socket token', socket.handshake.query.token)
     socket.emit('connection', socket.id)
 
     let user = guestAccounts.add(new User(/* userId */ socket.id, /*socket*/ socket, socket.decoded_token))
+
+    // send current public channels to this user
+    announcePublicChannels(socket)
 
     // attempt to join an open channel
     joinOpenChannel(user)
@@ -107,14 +111,17 @@ function start (server) {
     } else {
       // make new channel
       let name = guid()
-      let newChannel = matchups.add(new Matchup(name, io, matchups.maxUsersPerChannel))
+      let newChannel = matchups.add(new Matchup(name, playersNS, matchups.maxUsersPerChannel))
 
       // Publish channel list to all users when a channel is created
-      user.socket.broadcast.emit('publicChannels', matchups.getNames())
-      user.socket.emit('publicChannels', matchups.getNames())
+      announcePublicChannels(playersNS)
 
       newChannel.addUser(user)
     }
+  }
+
+  function announcePublicChannels (emitScope) {
+    emitScope.emit('publicChannels', matchups.getNames())
   }
 }
 

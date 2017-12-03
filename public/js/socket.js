@@ -19,7 +19,7 @@ const socketPromise = fetch('/login', {
   privateData.jwtToken = body.token
   privateData.jwtPayload = JSON.parse(atob(privateData.jwtToken.split('.')[1]))
   // let socket = io()
-  var socket = io.connect('', {
+  var socket = io.connect('/players', {
     'query': 'token=' + privateData.jwtToken
   })
   return socket
